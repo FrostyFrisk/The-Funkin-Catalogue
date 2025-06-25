@@ -33,7 +33,7 @@ class MainMenuState extends MusicBeatState
 {
     public static var psychEngineVersion:String = '0.6.2';
     public static var curSelected:Int = 0;
-    private static var introPlayed:Bool = false;
+    // Removed introPlayed
 
     var menuItems:FlxTypedGroup<FlxText>;
     private var camGame:FlxCamera;
@@ -41,7 +41,7 @@ class MainMenuState extends MusicBeatState
     private var netConn:NetConnection;
     private var netStream:NetStream;
     private var video:Video;
-    private var introVideo:VideoSprite;
+    // Removed introVideo
     
     var optionShit:Array<String> = [
         'story mode',
@@ -59,13 +59,8 @@ class MainMenuState extends MusicBeatState
 
     override function create()
     {
-        trace('MainMenuState.create() called, introPlayed=' + introPlayed);
-        if (!introPlayed)
-        {
-            trace('Playing intro video (hxCodec)...');
-            playIntroVideo();
-            return;
-        }
+        // Removed introPlayed check and playIntroVideo
+        trace('MainMenuState.create() called');
         // --- New menu visuals and logic ---
         #if MODS_ALLOWED
         Paths.pushGlobalMods();
@@ -175,25 +170,6 @@ class MainMenuState extends MusicBeatState
         super.create();
     }
 
-    private function playIntroVideo():Void
-    {
-        #if VIDEOS_ALLOWED
-        introVideo = new VideoSprite();
-        introVideo.finishCallback = function() {
-            trace('Intro video finished Videosprite');
-            introPlayed = true;
-            FlxG.sound.playMusic("assets/preload/music/TFCMenu.ogg", 1.0, true);
-            create();
-        };
-        introVideo.play("assets/videos/FunkinCatalogueIntro.mp4");
-        #else
-        trace('Video playback not allowed on this platform. Skipping intro.');
-        introPlayed = true;
-        FlxG.sound.playMusic("assets/preload/music/TFCMenu.ogg", 1.0, true);
-        create();
-        #end
-    }
-
     #if ACHIEVEMENTS_ALLOWED
     // Unlocks "Freaky on a Friday Night" achievement
     function giveAchievement() {
@@ -205,21 +181,7 @@ class MainMenuState extends MusicBeatState
 
     override function update(elapsed:Float)
     {
-        #if VIDEOS_ALLOWED
-        if (!introPlayed && introVideo != null)
-        {
-            if (FlxG.keys.justPressed.ENTER || FlxG.keys.justPressed.ESCAPE)
-            {
-                trace('Intro video skipped by user');
-                if (Reflect.hasField(introVideo, "stop")) Reflect.callMethod(introVideo, Reflect.field(introVideo, "stop"), []);
-                introPlayed = true;
-                FlxG.sound.playMusic("assets/preload/music/TFCMenu.ogg", 1.0, true);
-                create();
-                return;
-            }
-        }
-        #end
-        if (!introPlayed) return;
+        // Removed introPlayed and introVideo logic
         if (FlxG.sound.music.volume < 0.8)
         {
             FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
