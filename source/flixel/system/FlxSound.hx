@@ -113,8 +113,10 @@ class FlxSound extends FlxBasic
 
 	/**
 	 * The sound group this sound belongs to
+	 * (Disabled: FlxSoundGroup not found)
 	 */
-	public var group(default, set):FlxSoundGroup;
+	// public var group(default, set):FlxSoundGroup;
+	public var group(default, set):Dynamic;
 
 	/**
 	 * Whether or not this sound should loop.
@@ -592,16 +594,13 @@ class FlxSound extends FlxBasic
 		if (_channel != null)
 		{
 			_channel.soundTransform = _transform;
-
+			#if cpp
 			@:privateAccess
-			if(_channel.__source != null)
-			{
-				#if cpp
-				@:privateAccess
-				this._channel.__source.__backend.setPitch(_pitch);
+			if(_channel != null && Reflect.hasField(_channel, "__source") && Reflect.field(_channel, "__source") != null) {
+				Reflect.callMethod(Reflect.field(_channel, "__source"), Reflect.field(Reflect.field(_channel, "__source"), "__backend").setPitch, [_pitch]);
 				// trace('changing $name pitch new $_pitch');
-				#end
 			}
+			#end
 		}
 	}
 
@@ -709,20 +708,20 @@ class FlxSound extends FlxBasic
 	}
 	#end
 
-	function set_group(group:FlxSoundGroup):FlxSoundGroup
+	function set_group(group:Dynamic):Dynamic
 	{
 		if (this.group != group)
 		{
-			var oldGroup:FlxSoundGroup = this.group;
+			var oldGroup:Dynamic = this.group;
 
 			// New group must be set before removing sound to prevent infinite recursion
 			this.group = group;
 
-			if (oldGroup != null)
-				oldGroup.remove(this);
+			if (oldGroup != null && Reflect.hasField(oldGroup, "remove"))
+				Reflect.callMethod(oldGroup, Reflect.field(oldGroup, "remove"), [this]);
 
-			if (group != null)
-				group.add(this);
+			if (group != null && Reflect.hasField(group, "add"))
+				Reflect.callMethod(group, Reflect.field(group, "add"), [this]);
 
 			updateTransform();
 		}

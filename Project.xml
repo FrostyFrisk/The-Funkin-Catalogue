@@ -45,7 +45,7 @@
 	
 	<!-- PSYCH ENGINE CUSTOMIZATION -->
 	<define name="MODS_ALLOWED" if="desktop" />
-	<define name="LUA_ALLOWED" if="desktop" />
+	<!--define name="LUA_ALLOWED" if="desktop" /-->
 	<define name="ACHIEVEMENTS_ALLOWED" />
 	<define name="VIDEOS_ALLOWED" if="web || windows" unless="32bits"/>
 	<define name="PSYCH_WATERMARKS"/> <!-- DELETE THIS TO REMOVE WATERMARKS/DEV NAMES ON TITLE SCREEN -->
@@ -123,21 +123,21 @@
 	<assets path="assets/fonts" embed='true'/>
 	<!-- _______________________________ Libraries ______________________________ -->
 
-	<haxelib name="flixel" />
+	<haxelib name="flixel" version="4.11.0" />
 	<haxedev set='webgl' />
 
 	<!--In case you want to use the addons package-->
-	<haxelib name="flixel-addons" />
-	<haxelib name="hscript" />
+	<haxelib name="flixel-addons" version="2.11.0" />
+	<haxelib name="hscript" version="2.4.0" />
 	<define name="hscriptPos" />
 
 	<!--In case you want to use the ui package-->
-	<haxelib name="flixel-ui" />
-	<haxelib name="linc_luajit" if="LUA_ALLOWED"/>
-	<haxelib name="hxCodec" if="VIDEOS_ALLOWED"/>
+	<haxelib name="flixel-ui" version="2.5.0" />
+	<haxelib name="linc_luajit" version="0.0.7" if="LUA_ALLOWED"/>
+	<haxelib name="hxCodec" version="2.5.1" if="VIDEOS_ALLOWED"/>
 	<haxelib name="faxe" if='switch'/>
 	<!--<haxelib name="polymod"/> -->
-	<haxelib name="discord_rpc" if="desktop"/>
+	<haxelib name="discord_rpc" version="1.0.0" if="desktop"/>
 	<!-- <haxelib name="hxcpp-debug-server" if="desktop"/> -->
 
 	<!-- <haxelib name="markdown" /> -->
