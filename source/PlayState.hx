@@ -147,6 +147,8 @@ class PlayState extends MusicBeatState
 	public static var storyPlaylist:Array<String> = [];
 	public static var storyDifficulty:Int = 1;
 
+	public static var devMode:Bool = false;
+
 	public var spawnTime:Float = 2000;
 
 	public var vocals:FlxSound;
@@ -3026,6 +3028,11 @@ class PlayState extends MusicBeatState
 
 		setOnLuas('curDecStep', curDecStep);
 		setOnLuas('curDecBeat', curDecBeat);
+
+		if (FlxG.keys.justPressed.F3) {
+            devMode = !devMode;
+            trace('Dev mode: ' + devMode);
+        }
 
 		if(botplayTxt.visible) {
 			botplaySine += 180 * elapsed;

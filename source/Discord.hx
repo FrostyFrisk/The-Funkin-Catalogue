@@ -73,6 +73,12 @@ class DiscordClient
 	{
 		var startTimestamp:Float = if(hasStartTimestamp) Date.now().getTime() else 0;
 
+		if (PlayState.devMode) {
+            // Hide all song/game info in dev mode
+            DiscordClient.changePresence("Developer Mode", "", null, null);
+            return;
+        }
+
 		if (endTimestamp > 0)
 		{
 			endTimestamp = startTimestamp + endTimestamp;

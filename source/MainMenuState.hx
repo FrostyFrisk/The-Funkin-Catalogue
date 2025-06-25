@@ -4,11 +4,9 @@ import flixel.FlxG;
 import flixel.FlxState;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
-import flixel.text.FlxTextBorderStyle;
-import flixel.text.FlxTextAlign;
 import flixel.util.FlxColor;
 import flixel.tweens.FlxTween;
-import flixel.math.FlxEase;
+import flixel.tweens.FlxEase;
 import openfl.media.Video;
 import openfl.net.NetConnection;
 import openfl.net.NetStream;
@@ -129,8 +127,8 @@ class MainMenuState extends FlxState
                     null,                // default font
                     24,                  // size
                     FlxColor.WHITE,      // color
-                    FlxTextAlign.CENTER,
-                    FlxTextBorderStyle.OUTLINE,
+                    FlxText.Align.CENTER,
+                    FlxText.BorderStyle.OUTLINE,
                     FlxColor.BLACK
                 );
             label.alpha = 0;

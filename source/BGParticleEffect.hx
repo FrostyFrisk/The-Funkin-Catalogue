@@ -1,7 +1,7 @@
 package;
 
 import flixel.FlxG;
-import flixel.effects.FlxEmitter;
+import flixel.effects.particles.FlxEmitter;
 import flixel.FlxSprite;
 import flixel.util.FlxColor;
 
@@ -29,8 +29,8 @@ class BGParticleEffect extends FlxEmitter
             add(square);
         }
 
-        // Tint squares a light grey
-        setColor(0xFF888888);
+        // Tint squares a light grey (set color for each particle)
+        forEach(function(p:FlxSprite) p.color = 0xFF888888);
 
         // Velocity: upward drift with slight horizontal variance
         setXSpeed(-10, 10);
