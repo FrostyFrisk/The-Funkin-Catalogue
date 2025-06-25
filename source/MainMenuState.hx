@@ -25,6 +25,7 @@ import openfl.net.NetConnection;
 import openfl.net.NetStream;
 import openfl.events.NetStatusEvent;
 import BGParticleEffect;
+import hxcodec.flixel.FlxVideoSprite;
 
 using StringTools;
 
@@ -40,6 +41,7 @@ class MainMenuState extends MusicBeatState
     private var netConn:NetConnection;
     private var netStream:NetStream;
     private var video:Video;
+    private var introVideo:FlxVideoSprite;
     
     var optionShit:Array<String> = [
         'story mode',
@@ -60,7 +62,7 @@ class MainMenuState extends MusicBeatState
         trace('MainMenuState.create() called, introPlayed=' + introPlayed);
         if (!introPlayed)
         {
-            trace('Playing intro video...');
+            trace('Playing intro video (hxCodec)...');
             playIntroVideo();
             return;
         }
@@ -175,41 +177,23 @@ class MainMenuState extends MusicBeatState
 
     private function playIntroVideo():Void
     {
-        trace('playIntroVideo() called');
-        netConn   = new NetConnection();
-        netConn.connect(null);
-        netStream = new NetStream(netConn);
-        netStream.client = {};
-        video = new Video(FlxG.width, FlxG.height);
-        video.attachNetStream(netStream);
-        FlxG.stage.addChild(video);
-        netStream.addEventListener(NetStatusEvent.NET_STATUS, function(e:NetStatusEvent) {
-            trace('NetStatusEvent: ' + e.info.code);
-            if (e.info.code == "NetStream.Play.Stop")
-                cleanupVideo();
-            else if (e.info.code == "NetStream.Play.StreamNotFound") {
-                trace('Video file not found, skipping to menu.');
-                cleanupVideo();
-            }
-        });
-        try {
-            netStream.play("assets/videos/FunkinCatalogueIntro.mp4");
-        } catch (e:Dynamic) {
-            trace('Error playing video: ' + e);
-            cleanupVideo();
-        }
-    }
-
-    private function cleanupVideo():Void
-    {
-        trace('cleanupVideo() called');
-        if (video != null && FlxG.stage.contains(video)) FlxG.stage.removeChild(video);
-        if (netStream != null) netStream.close();
+        #if VIDEOS_ALLOWED
+        introVideo = new FlxVideoSprite("assets/videos/FunkinCatalogueIntro.mp4");
+        add(introVideo);
+        introVideo.finishCallback = function() {
+            trace('Intro video finished (hxCodec)');
+            remove(introVideo);
+            introPlayed = true;
+            FlxG.sound.playMusic("assets/preload/music/TFCMenu.ogg", 1.0, true);
+            create();
+        };
+        introVideo.play();
+        #else
+        trace('Video playback not allowed on this platform. Skipping intro.');
         introPlayed = true;
-        // Start menu music & background effect
         FlxG.sound.playMusic("assets/preload/music/TFCMenu.ogg", 1.0, true);
-        // Switch to menu visuals
         create();
+        #end
     }
 
     #if ACHIEVEMENTS_ALLOWED
