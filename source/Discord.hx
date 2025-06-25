@@ -2,6 +2,7 @@ package;
 
 import Sys.sleep;
 import discord_rpc.DiscordRpc;
+import ClientPrefs;
 
 #if LUA_ALLOWED
 import llua.Lua;
@@ -61,6 +62,10 @@ class DiscordClient
 
 	public static function initialize()
 	{
+		if (!ClientPrefs.discordRPCEnabled) {
+			trace('Discord RPC is disabled by ClientPrefs.');
+			return;
+		}
 		var DiscordDaemon = sys.thread.Thread.create(() ->
 		{
 			new DiscordClient();
@@ -71,6 +76,10 @@ class DiscordClient
 
 	public static function changePresence(details:String, state:Null<String>, ?smallImageKey : String, ?hasStartTimestamp : Bool, ?endTimestamp: Float)
 	{
+		if (!ClientPrefs.discordRPCEnabled) {
+			trace('Discord RPC presence update skipped (disabled by ClientPrefs).');
+			return;
+		}
 		var startTimestamp:Float = if(hasStartTimestamp) Date.now().getTime() else 0;
 
 		if (PlayState.devMode) {

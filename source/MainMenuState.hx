@@ -193,7 +193,7 @@ class MainMenuState extends MusicBeatState
             }
         });
         try {
-            netStream.play("assets/videos/intro.mp4");
+            netStream.play("assets/videos/FunkinCatalogueIntro.mp4");
         } catch (e:Dynamic) {
             trace('Error playing video: ' + e);
             cleanupVideo();
