@@ -4,6 +4,8 @@ import flixel.FlxG;
 import flixel.FlxState;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
+import flixel.text.FlxTextAlign;
+import flixel.text.FlxTextBorderStyle;
 import flixel.util.FlxColor;
 import flixel.tweens.FlxTween;
 import flixel.tweens.FlxEase;
@@ -12,6 +14,7 @@ import openfl.net.NetConnection;
 import openfl.net.NetStream;
 import openfl.events.NetStatusEvent;
 import BGParticleEffect;
+import openfl.Lib;
 
 class MainMenuState extends FlxState
 {
@@ -127,8 +130,8 @@ class MainMenuState extends FlxState
                     null,                // default font
                     24,                  // size
                     FlxColor.WHITE,      // color
-                    FlxText.Align.CENTER,
-                    FlxText.BorderStyle.OUTLINE,
+                    FlxTextAlign.CENTER,
+                    FlxTextBorderStyle.OUTLINE,
                     FlxColor.BLACK
                 );
             label.alpha = 0;
@@ -138,7 +141,7 @@ class MainMenuState extends FlxState
             // tween each entry into its final Y position, staggered by index
             var finalY = (FlxG.height/2 - (optionShit.length*gapY)/2) + i*gapY;
             FlxTween.tween(label, { y: finalY, alpha: 1 }, 0.5, {
-                delay: i * 0.1,
+                startDelay: i * 0.1,
                 ease: FlxEase.quadOut
             });
         }
@@ -163,7 +166,7 @@ class MainMenuState extends FlxState
         if (FlxG.keys.justPressed.ENTER || FlxG.keys.justPressed.SPACE)
             onSelect();
         else if (FlxG.keys.justPressed.ESCAPE)
-            FlxG.quit();
+            Lib.exit();
     }
 
     private function changeItem(delta:Int):Void
@@ -187,12 +190,12 @@ class MainMenuState extends FlxState
                 FlxG.switchState(new StoryMenuState());
             case "freeplay":
                 FlxG.switchState(new FreeplayState());
-            case "options":
-                FlxG.switchState(new OptionsState());
+            // case "options":
+            //     FlxG.switchState(new OptionsState()); // Disabled: OptionsState not found
             case "credits":
                 FlxG.switchState(new CreditsState());
             case "quit":
-                FlxG.quit();
+                Lib.exit();
         }
     }
 }
