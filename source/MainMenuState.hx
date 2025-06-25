@@ -25,7 +25,6 @@ import openfl.net.NetConnection;
 import openfl.net.NetStream;
 import openfl.events.NetStatusEvent;
 import BGParticleEffect;
-import flixel.text.FlxTextBorderStyle;
 
 using StringTools;
 
@@ -35,7 +34,7 @@ class MainMenuState extends MusicBeatState
     public static var curSelected:Int = 0;
     private static var introPlayed:Bool = false;
 
-    var menuItems:FlxTypedGroup<FlxSprite>;
+    var menuItems:FlxTypedGroup<FlxText>;
     private var camGame:FlxCamera;
     private var camAchievement:FlxCamera;
     private var netConn:NetConnection;
@@ -88,7 +87,8 @@ class MainMenuState extends MusicBeatState
         persistentUpdate = persistentDraw = true;
 
         var yScroll:Float = Math.max(0.25 - (0.05 * (optionShit.length - 4)), 0.1);
-        var bg:FlxSprite = new FlxSprite(0, 0).makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
+        // Use custom background art
+        var bg:FlxSprite = new FlxSprite(0, 0).loadGraphic(Paths.image('newmainmenuart/background'));
         bg.scrollFactor.set(0, yScroll);
         add(bg);
 
@@ -109,46 +109,50 @@ class MainMenuState extends MusicBeatState
         magenta.color = 0xFFfd719b;
         //add(magenta);
 
+        // Title text (top left)
+        var titleText:FlxText = new FlxText(32, 32, 0, "the funkin' catalogue", 32);
+        titleText.setFormat("VCR OSD Mono", 32, 0xFFC0C0C0, LEFT, FlxColor.BLACK); // light gray
+        titleText.alpha = 0.7;
+        add(titleText);
+        // DEMO tag (top right of title)
+        var demoText:FlxText = new FlxText(titleText.x + titleText.width + 16, 40, 0, "DEMO", 28);
+        demoText.setFormat("VCR OSD Mono", 28, 0xFF444444, LEFT, FlxColor.BLACK); // dark gray
+        demoText.alpha = 0.5;
+        add(demoText);
+
+        // Menu items (styled as in screenshot)
         menuItems = new FlxTypedGroup<FlxText>();
         add(menuItems);
-
-        var scale:Float = 1;
-        var startX = (FlxG.width - 300) / 2;
-        var startY = FlxG.height + 50;
-        var gapY   = 60;
+        var menuStartY = 180;
+        var menuGap = 70;
+        var menuX = 180;
         for (i in 0...optionShit.length)
         {
-            var label = new FlxText(startX, startY + i*gapY, 300, optionShit[i].toUpperCase());
-            label.setFormat("VCR OSD Mono", 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-            label.alpha = 0;
+            var label = new FlxText(menuX, menuStartY + i*menuGap, 0, optionShit[i].toUpperCase(), 48);
+            label.setFormat("VCR OSD Mono", 48, FlxColor.WHITE, LEFT, FlxColor.BLACK);
+            label.alpha = (i == 0) ? 1 : 0.4;
+            label.color = FlxColor.WHITE;
             add(label);
             menuItems.add(label);
-            // Tween each entry into its final Y position, staggered by index
-            var finalY = (FlxG.height/2 - (optionShit.length*gapY)/2) + i*gapY;
-            FlxTween.tween(label, { y: finalY, alpha: 1 }, 0.5, {
-                startDelay: i * 0.1,
-                ease: FlxEase.quadOut
-            });
         }
-        // Add underline sprite
-        underline = new FlxSprite();
-        underline.makeGraphic(300, 4, FlxColor.WHITE);
-        underline.alpha = 1;
-        add(underline);
+        // White rectangle selector
+        var selector:FlxSprite = new FlxSprite(menuX - 50, menuStartY, null);
+        selector.makeGraphic(18, 48, FlxColor.WHITE);
+        selector.alpha = 1;
+        add(selector);
         curSelected = 0;
         updateSelectionVisuals();
-
         FlxG.camera.follow(camFollowPos, null, 1);
 
         changeItem();
 
         var versionShit:FlxText = new FlxText(12, FlxG.height - 44, 0, "Psych Engine v" + psychEngineVersion, 12);
         versionShit.scrollFactor.set();
-        versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+        versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxColor.BLACK);
         //add(versionShit);
         versionShit = new FlxText(12, FlxG.height - 24, 0, "Friday Night Funkin' v" + Application.current.meta.get('version'), 12);
         versionShit.scrollFactor.set();
-        versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+        versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxColor.BLACK);
         //add(versionShit);
 
         #if ACHIEVEMENTS_ALLOWED
@@ -219,7 +223,6 @@ class MainMenuState extends MusicBeatState
             if (FlxG.keys.justPressed.DOWN)  changeItem( 1);
             if (FlxG.keys.justPressed.ENTER || FlxG.keys.justPressed.SPACE)
                 onSelect();
-            // ...existing code...
             if (controls.BACK)
             {
                 selectedSomethin = true;
@@ -290,17 +293,15 @@ class MainMenuState extends MusicBeatState
         for (i in 0...menuItems.length)
         {
             var label = menuItems.members[i];
-            label.alpha = 1;
-            label.color = FlxColor.WHITE;
+            label.alpha = (i == curSelected) ? 1 : 0.4;
         }
-        // Move underline to selected label
         var selectedLabel = menuItems.members[curSelected];
         underline.x = selectedLabel.x;
         underline.y = selectedLabel.y + selectedLabel.height + 4;
         underline.visible = true;
     }
 
-    function changeItem(delta:Int):Void
+    function changeItem(delta:Int = 0):Void
     {
         curSelected = (curSelected + delta + menuItems.length) % menuItems.length;
         updateSelectionVisuals();

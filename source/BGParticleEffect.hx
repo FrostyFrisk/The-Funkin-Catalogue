@@ -1,43 +1,47 @@
 package;
 
-import flixel.FlxG;
-import flixel.effects.particles.FlxEmitter;
-import flixel.effects.particles.FlxParticle;
 import flixel.FlxSprite;
-import flixel.util.FlxColor;
+import flixel.FlxG;
+import flixel.group.FlxGroup;
 
 /**
- *  A full-screen particle effect emitting simple grey squares.
+ *  A full-screen, subtle gray dust particle effect.
  */
-class BGParticleEffect extends FlxEmitter
+class BGParticleEffect extends FlxGroup
 {
-    public function new()
+    public function new(amount:Int = 60)
     {
-        // Position emitter across bottom of screen
-        super(0, FlxG.height - 10, 60); // 60 particles
-        width  = FlxG.width;
-        height = 10;
+        super();
 
-        // Create 60 square particles manually
-        for (i in 0...60)
+        for (i in 0...amount)
         {
             var size = FlxG.random.float(2, 4);
-            var square = new FlxParticle();
-            square.makeGraphic(Std.int(size), Std.int(size), FlxColor.WHITE);
-            square.alpha = 0;
-            square.color = 0xFF888888;
-            add(square);
+            var particle = new FlxSprite();
+            particle.makeGraphic(Std.int(size), Std.int(size), 0xAA888888); // semi-transparent gray
+            particle.x = FlxG.random.float(0, FlxG.width);
+            particle.y = FlxG.random.float(0, FlxG.height);
+            particle.velocity.x = FlxG.random.float(-10, -2); // slow leftward drift
+            particle.velocity.y = FlxG.random.float(-8, -2);  // slow upward drift
+            particle.alpha = FlxG.random.float(0.15, 0.35);   // subtle transparency
+            add(particle);
         }
+    }
 
-        // Set velocity and rotation using setXSpeed/setYSpeed/setRotation for compatibility
-        setXSpeed(-10, 10);
-        setYSpeed(-80, -30);
-        setRotation(0, 0);
+    override public function update(elapsed:Float):Void
+    {
+        super.update(elapsed);
 
-        // No gravity
-        // (FlxEmitter in 4.11.0 does not have a gravity property, so skip)
-
-        // Continuous emission: lifespan 3s, frequency 0.05s, one per tick
-        start(true, 3, 0.05, 1);
+        for (sprite in members)
+        {
+            var particle = cast(sprite, FlxSprite);
+            if (particle.x < -5 || particle.y < -5)
+            {
+                particle.x = FlxG.width + 5;
+                particle.y = FlxG.random.float(0, FlxG.height);
+                particle.velocity.x = FlxG.random.float(-10, -2);
+                particle.velocity.y = FlxG.random.float(-8, -2);
+                particle.alpha = FlxG.random.float(0.15, 0.35);
+            }
+        }
     }
 }
