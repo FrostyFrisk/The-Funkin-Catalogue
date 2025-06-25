@@ -77,7 +77,16 @@ class MP4Handler extends VlcBitmap
 
 	function onVLCError()
 	{
-		// TODO: Catch the error
+		// Improved error logging
+		trace("[VLC ERROR] onVLCError called in MP4Handler.hx");
+		#if cpp
+		try {
+			var lastError = cpp.Lib.load("vlc", "libvlc_errmsg", 0);
+			trace('[VLC ERROR] Last VLC error: ' + lastError);
+		} catch(e:Dynamic) {
+			trace('[VLC ERROR] Could not retrieve VLC error message: ' + e);
+		}
+		#end
 		throw "VLC caught an error!";
 	}
 

@@ -474,8 +474,15 @@ class VlcBitmap extends Bitmap
 
 	function statusOnError()
 	{
-		trace("VLC ERROR - File not found?");
-
+		trace("[VLC ERROR] statusOnError called in VlcBitmap.hx - File not found? Or other VLC error.");
+		#if cpp
+		try {
+			var lastError = cpp.Lib.load("vlc", "libvlc_errmsg", 0);
+			trace('[VLC ERROR] Last VLC error: ' + lastError);
+		} catch(e:Dynamic) {
+			trace('[VLC ERROR] Could not retrieve VLC error message: ' + e);
+		}
+		#end
 		if (onError != null)
 			onError();
 	}
