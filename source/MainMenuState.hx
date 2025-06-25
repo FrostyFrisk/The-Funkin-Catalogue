@@ -26,7 +26,7 @@ import openfl.net.NetStream;
 import openfl.events.NetStatusEvent;
 import BGParticleEffect;
 #if VIDEOS_ALLOWED
-import hxcodec.MP4Handler;
+import vlc.MP4Handler;
 #end
 
 using StringTools;
@@ -183,7 +183,7 @@ class MainMenuState extends MusicBeatState
         introVideo = new MP4Handler();
         add(introVideo);
         introVideo.finishCallback = function() {
-            trace('Intro video finished (hxCodec/MP4Handler)');
+            trace('Intro video finished (vlc/MP4Handler)');
             remove(introVideo);
             introPlayed = true;
             FlxG.sound.playMusic("assets/preload/music/TFCMenu.ogg", 1.0, true);
