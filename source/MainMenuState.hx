@@ -25,7 +25,9 @@ import openfl.net.NetConnection;
 import openfl.net.NetStream;
 import openfl.events.NetStatusEvent;
 import BGParticleEffect;
-import hxcodec.flixel.FlxVideo;
+#if VIDEOS_ALLOWED
+import hxcodec.FlxVideo;
+#end
 
 using StringTools;
 
