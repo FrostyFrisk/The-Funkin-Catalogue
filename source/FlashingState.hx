@@ -19,6 +19,9 @@ class FlashingState extends MusicBeatState
 	override function create()
 	{
 		super.create();
+		// Instantly skip this state
+		MusicBeatState.switchState(new MainMenuState());
+		return;
 
 		var bg:FlxSprite = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
 		add(bg);

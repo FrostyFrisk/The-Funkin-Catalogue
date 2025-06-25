@@ -209,6 +209,20 @@ class MainMenuState extends MusicBeatState
 
     override function update(elapsed:Float)
     {
+        #if VIDEOS_ALLOWED
+        if (!introPlayed && introVideo != null && introVideo.exists)
+        {
+            if (FlxG.keys.justPressed.ENTER || FlxG.keys.justPressed.ESCAPE)
+            {
+                trace('Intro video skipped by user');
+                remove(introVideo);
+                introPlayed = true;
+                FlxG.sound.playMusic("assets/preload/music/TFCMenu.ogg", 1.0, true);
+                create();
+                return;
+            }
+        }
+        #end
         if (!introPlayed) return;
         if (FlxG.sound.music.volume < 0.8)
         {
