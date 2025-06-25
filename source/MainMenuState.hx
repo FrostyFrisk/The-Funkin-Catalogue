@@ -181,10 +181,8 @@ class MainMenuState extends MusicBeatState
     {
         #if VIDEOS_ALLOWED
         introVideo = new MP4Handler();
-        add(introVideo);
         introVideo.finishCallback = function() {
             trace('Intro video finished (vlc/MP4Handler)');
-            remove(introVideo);
             introPlayed = true;
             FlxG.sound.playMusic("assets/preload/music/TFCMenu.ogg", 1.0, true);
             create();
@@ -210,12 +208,12 @@ class MainMenuState extends MusicBeatState
     override function update(elapsed:Float)
     {
         #if VIDEOS_ALLOWED
-        if (!introPlayed && introVideo != null && introVideo.exists)
+        if (!introPlayed && introVideo != null)
         {
             if (FlxG.keys.justPressed.ENTER || FlxG.keys.justPressed.ESCAPE)
             {
                 trace('Intro video skipped by user');
-                remove(introVideo);
+                if (Reflect.hasField(introVideo, "stop")) Reflect.callMethod(introVideo, Reflect.field(introVideo, "stop"), []);
                 introPlayed = true;
                 FlxG.sound.playMusic("assets/preload/music/TFCMenu.ogg", 1.0, true);
                 create();
