@@ -29,16 +29,13 @@ class BGParticleEffect extends FlxEmitter
             add(square);
         }
 
-        // Set velocity ranges
-        minParticleSpeed.set(-10, -80);
-        maxParticleSpeed.set(10, -30);
+        // Set velocity and rotation using setXSpeed/setYSpeed/setRotation for compatibility
+        setXSpeed(-10, 10);
+        setYSpeed(-80, -30);
+        setRotation(0, 0);
 
         // No gravity
-        acceleration.set(0, 0);
-
-        // No rotation for squares
-        minRotation = 0;
-        maxRotation = 0;
+        // (FlxEmitter in 4.11.0 does not have a gravity property, so skip)
 
         // Continuous emission: lifespan 3s, frequency 0.05s, one per tick
         start(true, 3, 0.05, 1);
