@@ -57,8 +57,10 @@ class MainMenuState extends MusicBeatState
 
     override function create()
     {
+        trace('MainMenuState.create() called, introPlayed=' + introPlayed);
         if (!introPlayed)
         {
+            trace('Playing intro video...');
             playIntroVideo();
             return;
         }
@@ -173,6 +175,7 @@ class MainMenuState extends MusicBeatState
 
     private function playIntroVideo():Void
     {
+        trace('playIntroVideo() called');
         netConn   = new NetConnection();
         netConn.connect(null);
         netStream = new NetStream(netConn);
@@ -181,16 +184,27 @@ class MainMenuState extends MusicBeatState
         video.attachNetStream(netStream);
         FlxG.stage.addChild(video);
         netStream.addEventListener(NetStatusEvent.NET_STATUS, function(e:NetStatusEvent) {
+            trace('NetStatusEvent: ' + e.info.code);
             if (e.info.code == "NetStream.Play.Stop")
                 cleanupVideo();
+            else if (e.info.code == "NetStream.Play.StreamNotFound") {
+                trace('Video file not found, skipping to menu.');
+                cleanupVideo();
+            }
         });
-        netStream.play("assets/videos/intro.mp4");
+        try {
+            netStream.play("assets/videos/intro.mp4");
+        } catch (e:Dynamic) {
+            trace('Error playing video: ' + e);
+            cleanupVideo();
+        }
     }
 
     private function cleanupVideo():Void
     {
-        FlxG.stage.removeChild(video);
-        netStream.close();
+        trace('cleanupVideo() called');
+        if (video != null && FlxG.stage.contains(video)) FlxG.stage.removeChild(video);
+        if (netStream != null) netStream.close();
         introPlayed = true;
         // Start menu music & background effect
         FlxG.sound.playMusic("assets/preload/music/TFCMenu.ogg", 1.0, true);
