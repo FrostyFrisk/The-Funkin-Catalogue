@@ -1317,6 +1317,11 @@ class ChartingState extends MusicBeatState
 		#if !html5
 		sliderRate = new FlxUISlider(this, 'playbackSpeed', 120, 120, 0.5, 3, 150, null, 5, FlxColor.WHITE, FlxColor.BLACK);
 		sliderRate.nameLabel.text = 'Playback Rate';
+		sliderRate.callback = function(val:Float) {
+	playbackSpeed = val;
+	FlxG.sound.music.pitch = playbackSpeed;
+	if (vocals != null) vocals.pitch = playbackSpeed;
+};
 		tab_group_chart.add(sliderRate);
 		#end
 
@@ -1677,7 +1682,7 @@ class ChartingState extends MusicBeatState
 				FlxG.sound.music.stop();
 				if(vocals != null) vocals.stop();
 
-				//if(_song.stage == null) _song.stage = stageDropDown.selectedLabel;
+				//if(_song.stage == null) _song.stage = 'stage';
 				StageData.loadDirectory(_song);
 				LoadingState.loadAndSwitchState(new PlayState());
 			}
@@ -1685,6 +1690,7 @@ class ChartingState extends MusicBeatState
 			if(curSelectedNote != null && curSelectedNote[1] > -1) {
 				if (FlxG.keys.justPressed.E)
 				{
+
 					changeNoteSustain(Conductor.stepCrochet);
 				}
 				if (FlxG.keys.justPressed.Q)
@@ -1881,7 +1887,7 @@ class ChartingState extends MusicBeatState
 
 
 					updateCurStep();
-					//FlxG.sound.music.time = (Math.round(curStep/quants[curQuant])*quants[curQuant]) * Conductor.stepCrochet;
+					//FlxG.sound.music.time = (Math.round(curStep/quants[curQuant]*1.5) * quants[curQuant]) * Conductor.stepCrochet;
 
 						//(Math.floor((curStep+quants[curQuant]*1.5/(quants[curQuant]/2))/quants[curQuant])*quants[curQuant]) * Conductor.stepCrochet;//snap into quantization
 					var time:Float = FlxG.sound.music.time;
