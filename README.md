@@ -1,2 +1,2 @@
 # The-Funkin-Catalogue
-The mod.
+The mandela mod. Wow.
