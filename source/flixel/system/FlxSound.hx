@@ -14,6 +14,7 @@ import flixel.system.FlxAssets.FlxSoundAsset;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxStringUtil;
 import openfl.Assets;
+import flixel.system.FlxSoundGroup;
 #if flash11
 import flash.utils.ByteArray;
 #end
