@@ -25,9 +25,7 @@ import openfl.net.NetConnection;
 import openfl.net.NetStream;
 import openfl.events.NetStatusEvent;
 import BGParticleEffect;
-#if VIDEOS_ALLOWED
-import vlc.MP4Handler;
-#end
+import hxcodec.VideoHandler;
 
 using StringTools;
 
@@ -43,7 +41,7 @@ class MainMenuState extends MusicBeatState
     private var netConn:NetConnection;
     private var netStream:NetStream;
     private var video:Video;
-    private var introVideo:MP4Handler;
+    private var introVideo:VideoHandler;
     
     var optionShit:Array<String> = [
         'story mode',
@@ -180,9 +178,9 @@ class MainMenuState extends MusicBeatState
     private function playIntroVideo():Void
     {
         #if VIDEOS_ALLOWED
-        introVideo = new MP4Handler();
+        introVideo = new VideoHandler();
         introVideo.finishCallback = function() {
-            trace('Intro video finished (vlc/MP4Handler)');
+            trace('Intro video finished Videohandler');
             introPlayed = true;
             FlxG.sound.playMusic("assets/preload/music/TFCMenu.ogg", 1.0, true);
             create();
