@@ -108,9 +108,14 @@ class MainMenuState extends MusicBeatState
         {
             var label = new FlxText(menuX, menuStartY + i*menuGap, 0, optionShit[i].substr(0,1).toUpperCase() + optionShit[i].substr(1), 48);
             label.setFormat("VCR OSD Mono", 48, FlxColor.WHITE, LEFT, FlxColor.BLACK);
-            label.alpha = (i == 0) ? 1 : 0.4;
+            if (optionShit[i] == 'freeplay') {
+                label.color = 0xFF888888; // greyed out
+                label.alpha = 0.6;
+            } else {
+                label.alpha = (i == 0) ? 1 : 0.4;
+                label.color = FlxColor.WHITE;
+            }
             label.bold = (i == 0);
-            label.color = FlxColor.WHITE;
             add(label);
             menuItems.add(label);
         }
@@ -171,7 +176,13 @@ class MainMenuState extends MusicBeatState
         {
             var label = menuItems.members[i];
             if (label != null) {
-                label.alpha = (i == curSelected) ? 1 : 0.4;
+                if (optionShit[i] == 'freeplay') {
+                    label.color = 0xFF888888;
+                    label.alpha = 0.6;
+                } else {
+                    label.alpha = (i == curSelected) ? 1 : 0.4;
+                    label.color = FlxColor.WHITE;
+                }
                 label.bold = (i == curSelected);
             }
         }
@@ -194,6 +205,15 @@ class MainMenuState extends MusicBeatState
     function onSelect():Void
     {
         if (transitioning) return;
+        var selectedLabel = menuItems.members[curSelected];
+        if (optionShit[curSelected] == 'freeplay') {
+            // Play error/locked SFX and shake the menu item
+            FlxG.sound.play(Paths.sound('cancelMenu'));
+            if (selectedLabel != null) {
+                FlxFlicker.flicker(selectedLabel, 0.4, 0.05, true, false);
+            }
+            return;
+        }
         transitioning = true;
         // Camera zoom to TV, then switch state
         FlxG.camera.focusOn(tvPos.getPosition());
@@ -204,8 +224,6 @@ class MainMenuState extends MusicBeatState
                 {
                     case 'story mode':
                         MusicBeatState.switchState(new StoryMenuState());
-                    case 'freeplay':
-                        MusicBeatState.switchState(new FreeplayState());
                     case 'credits':
                         MusicBeatState.switchState(new CreditsState());
                     case 'options':
