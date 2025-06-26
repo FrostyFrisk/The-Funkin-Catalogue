@@ -83,20 +83,45 @@ class DiscordClient
 		var startTimestamp:Float = if(hasStartTimestamp) Date.now().getTime() else 0;
 
 		if (PlayState.devMode) {
-            // Hide all song/game info in dev mode
-            DiscordClient.changePresence("Developer Mode", "", null, null);
-            return;
-        }
+			// Hide all song/game info in dev mode
+			DiscordClient.changePresence("Developer Mode", "", null, null);
+			return;
+		}
 
 		if (endTimestamp > 0)
 		{
 			endTimestamp = startTimestamp + endTimestamp;
 		}
 
+		// Custom icon logic for songs
+		var largeImageKey = 'icon';
+		#if (exists('PlayState') && exists('PlayState.SONG'))
+		try {
+			var songName = null;
+			if (Reflect.hasField(PlayState, 'SONG') && PlayState.SONG != null && Reflect.hasField(PlayState.SONG, 'song')) {
+				songName = PlayState.SONG.song;
+			} else if (Reflect.hasField(PlayState, 'curSong')) {
+				songName = PlayState.curSong;
+			}
+			if (songName != null) {
+				var songKey = songName.toLowerCase();
+				var iconMap = [
+					'favor' => 'favor_icon',
+					'newsflash' => 'favor_icon',
+					'seraph' => 'seraph_icon',
+					'soliloquy' => 'soliloquy_icon'
+				];
+				if (iconMap.exists(songKey)) {
+					largeImageKey = iconMap.get(songKey);
+				}
+			}
+		} catch(e:Dynamic) {}
+		#end
+
 		DiscordRpc.presence({
 			details: details,
 			state: state,
-			largeImageKey: 'icon',
+			largeImageKey: largeImageKey,
 			largeImageText: "Engine Version: " + MainMenuState.psychEngineVersion,
 			smallImageKey : smallImageKey,
 			// Obtained times are in milliseconds so they are divided so Discord can use it

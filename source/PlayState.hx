@@ -3012,6 +3012,17 @@ class PlayState extends MusicBeatState
 			}
 		}
 
+		if (FlxG.keys.justPressed.F3) {
+    	rpcEnabled = !rpcEnabled;
+    	if (!rpcEnabled) {
+        		DiscordClient.shutdown(); // Turns off RPC
+    	} else {
+        		DiscordClient.initialize(); // Turns on RPC
+        		// Optionally update presence here
+        		updateDiscordPresence(); // Replace with your actual function
+    	}
+		}
+
 		if (FlxG.keys.anyJustPressed(debugKeysChart) && !endingSong && !inCutscene)
 		{
 			openChartEditor();
