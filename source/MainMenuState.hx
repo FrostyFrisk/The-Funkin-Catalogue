@@ -171,29 +171,30 @@ class MainMenuState extends MusicBeatState
 
     function updateSelectionVisuals():Void
     {
-        if (menuItems == null || menuItems.length == 0) return;
-        if (curSelected < 0 || curSelected >= menuItems.length) return;
-        for (i in 0...menuItems.length)
-        {
-            var label = menuItems.members[i];
-            if (label != null) {
-                if (optionShit[i] == 'freeplay') {
-                    label.color = 0xFF888888;
-                    label.alpha = 0.6;
-                } else {
-                    label.alpha = (i == curSelected) ? 1 : 0.4;
-                    label.color = FlxColor.WHITE;
-                }
-                label.bold = (i == curSelected);
+    if (menuItems == null || menuItems.length == 0) return;
+    if (curSelected < 0 || curSelected >= menuItems.length) return;
+    for (i in 0...menuItems.length)
+    {
+        var label = menuItems.members[i];
+        if (label != null) {
+            if (optionShit[i] == 'freeplay') {
+                label.color = 0xFF888888;
+                label.alpha = 0.6;
+            } else {
+                label.alpha = (i == curSelected) ? 1 : 0.4;
+                label.color = FlxColor.WHITE;
             }
+            label.bold = (i == curSelected);
         }
-        // Defensive: check selector and selectedLabel
-        var selectedLabel = (curSelected >= 0 && curSelected < menuItems.length) ? menuItems.members[curSelected] : null;
-        if (selector != null && selectedLabel != null) {
-            selector.x = selectedLabel.x - 50;
-            selector.y = selectedLabel.y;
-            selector.visible = true;
-        }
+    }
+    var selectedLabel:FlxText = null;
+    if (curSelected >= 0 && curSelected < menuItems.length)
+        selectedLabel = menuItems.members[curSelected];
+    if (selector != null && selectedLabel != null && selectedLabel.x != null && selectedLabel.y != null) {
+        selector.x = selectedLabel.x - 50;
+        selector.y = selectedLabel.y;
+        selector.visible = true;
+    }
     }
 
     function changeItem(delta:Int = 0):Void
