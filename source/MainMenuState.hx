@@ -120,7 +120,12 @@ class MainMenuState extends MusicBeatState
         selector.alpha = 1;
         add(selector);
         curSelected = 0;
-        updateSelectionVisuals();
+        // Only call updateSelectionVisuals if everything is ready
+        if (menuItems != null && menuItems.length > 0 && selector != null && menuItems.members[curSelected] != null) {
+            updateSelectionVisuals();
+        } else {
+            trace('Menu not ready for updateSelectionVisuals');
+        }
         FlxG.camera.follow(null);
 
         changeItem();
