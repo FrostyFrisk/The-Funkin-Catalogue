@@ -187,8 +187,9 @@ class MainMenuState extends MusicBeatState
                 label.bold = (i == curSelected);
             }
         }
-        if (selector != null && menuItems.members[curSelected] != null) {
-            var selectedLabel = menuItems.members[curSelected];
+        // Defensive: check selector and selectedLabel
+        var selectedLabel = (curSelected >= 0 && curSelected < menuItems.length) ? menuItems.members[curSelected] : null;
+        if (selector != null && selectedLabel != null) {
             selector.x = selectedLabel.x - 50;
             selector.y = selectedLabel.y;
             selector.visible = true;
