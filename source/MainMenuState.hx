@@ -171,30 +171,31 @@ class MainMenuState extends MusicBeatState
 
     function updateSelectionVisuals():Void
     {
-    if (menuItems == null || menuItems.length == 0) return;
-    if (curSelected < 0 || curSelected >= menuItems.length) return;
-    for (i in 0...menuItems.length)
-    {
-        var label = menuItems.members[i];
-        if (label != null) {
-            if (optionShit[i] == 'freeplay') {
-                label.color = 0xFF888888;
-                label.alpha = 0.6;
-            } else {
-                label.alpha = (i == curSelected) ? 1 : 0.4;
-                label.color = FlxColor.WHITE;
+        if (menuItems == null || menuItems.length == 0) return;
+        if (curSelected < 0 || curSelected >= menuItems.length) return;
+        for (i in 0...menuItems.length)
+        {
+            var label = menuItems.members[i];
+            if (label != null) {
+                if (optionShit[i] == 'freeplay') {
+                    label.color = 0xFF888888;
+                    label.alpha = 0.6;
+                } else {
+                    label.alpha = (i == curSelected) ? 1 : 0.4;
+                    label.color = FlxColor.WHITE;
+                }
+                label.bold = (i == curSelected);
             }
-            label.bold = (i == curSelected);
         }
-    }
-    var selectedLabel:FlxText = null;
-    if (curSelected >= 0 && curSelected < menuItems.length)
-        selectedLabel = menuItems.members[curSelected];
-    if (selector != null && selectedLabel != null && selectedLabel.x != null && selectedLabel.y != null) {
-        selector.x = selectedLabel.x - 50;
-        selector.y = selectedLabel.y;
-        selector.visible = true;
-    }
+        var selectedLabel:FlxText = null;
+        if (curSelected >= 0 && curSelected < menuItems.length)
+            selectedLabel = menuItems.members[curSelected];
+        // Fix: Only use selector.x/y if both are not null and are valid floats
+        if (selector != null && selectedLabel != null) {
+            selector.x = (selectedLabel.x != null) ? selectedLabel.x - 50 : 0;
+            selector.y = (selectedLabel.y != null) ? selectedLabel.y : 0;
+            selector.visible = true;
+        }
     }
 
     function changeItem(delta:Int = 0):Void
