@@ -51,7 +51,6 @@ class MainMenuState extends MusicBeatState
     var camFollowPos:FlxObject;
     var debugKeys:Array<FlxKey>;
     var selectedSomethin:Bool = false;
-    var underline:FlxSprite;
 
     private var camGame:FlxCamera;
     private var camAchievement:FlxCamera;
@@ -162,16 +161,20 @@ class MainMenuState extends MusicBeatState
 
     function updateSelectionVisuals():Void
     {
-        for (i in 0...menuItems.length)
-        {
-            var label = menuItems.members[i];
+    for (i in 0...menuItems.length)
+    {
+        var label = menuItems.members[i];
+        if (label != null) {
             label.alpha = (i == curSelected) ? 1 : 0.4;
             label.bold = (i == curSelected);
         }
-        var selectedLabel = menuItems.members[curSelected];
+    }
+    var selectedLabel = menuItems.members[curSelected];
+    if (selectedLabel != null) {
         selector.x = selectedLabel.x - 50;
         selector.y = selectedLabel.y;
         selector.visible = true;
+    }
     }
 
     function changeItem(delta:Int = 0):Void
