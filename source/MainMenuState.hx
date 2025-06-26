@@ -172,6 +172,7 @@ class MainMenuState extends MusicBeatState
     function updateSelectionVisuals():Void
     {
         if (menuItems == null || menuItems.length == 0) return;
+        if (curSelected < 0 || curSelected >= menuItems.length) return;
         for (i in 0...menuItems.length)
         {
             var label = menuItems.members[i];
@@ -196,6 +197,7 @@ class MainMenuState extends MusicBeatState
 
     function changeItem(delta:Int = 0):Void
     {
+        if (menuItems == null || menuItems.length == 0) return;
         curSelected = (curSelected + delta + menuItems.length) % menuItems.length;
         updateSelectionVisuals();
     }
