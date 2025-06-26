@@ -25,7 +25,6 @@ import openfl.net.NetConnection;
 import openfl.net.NetStream;
 import openfl.events.NetStatusEvent;
 import BGParticleEffect;
-import hxcodec.VideoSprite;
 
 using StringTools;
 
@@ -36,11 +35,8 @@ class MainMenuState extends MusicBeatState
     // Removed introPlayed
 
     var menuItems:FlxTypedGroup<FlxText>;
-    private var camGame:FlxCamera;
-    private var camAchievement:FlxCamera;
-    private var netConn:NetConnection;
-    private var netStream:NetStream;
-    private var video:Video;
+    var selector:FlxSprite;
+    var tvPos:FlxObject; // For camera zoom target
     // Removed introVideo
     
     var optionShit:Array<String> = [
@@ -57,16 +53,16 @@ class MainMenuState extends MusicBeatState
     var selectedSomethin:Bool = false;
     var underline:FlxSprite;
 
+    private var camGame:FlxCamera;
+    private var camAchievement:FlxCamera;
+
     override function create()
     {
-        // Removed introPlayed check and playIntroVideo
         trace('MainMenuState.create() called');
-        // --- New menu visuals and logic ---
         #if MODS_ALLOWED
         Paths.pushGlobalMods();
         #end
         WeekData.loadTheFirstEnabledMod();
-
         #if desktop
         DiscordClient.changePresence("In the Menus", null);
         #end
@@ -75,51 +71,35 @@ class MainMenuState extends MusicBeatState
         camGame = new FlxCamera();
         camAchievement = new FlxCamera();
         camAchievement.bgColor.alpha = 0;
-
         FlxG.cameras.reset(camGame);
         FlxG.cameras.add(camAchievement, false);
         FlxG.cameras.setDefaultDrawTarget(camGame, true);
-
         transIn = FlxTransitionableState.defaultTransIn;
         transOut = FlxTransitionableState.defaultTransOut;
-
         persistentUpdate = persistentDraw = true;
 
-        var yScroll:Float = Math.max(0.25 - (0.05 * (optionShit.length - 4)), 0.1);
-        // Use custom background art
+        // Background art
         var bg:FlxSprite = new FlxSprite(0, 0).loadGraphic(Paths.image('newmainmenuart/background'));
-        bg.scrollFactor.set(0, yScroll);
+        bg.scrollFactor.set(0, 0.1);
         add(bg);
-
+        // Dust particles
         add(new BGParticleEffect());
 
-        camFollow = new FlxObject(0, 0, 1, 1);
-        camFollowPos = new FlxObject(0, 0, 1, 1);
-        add(camFollow);
-        add(camFollowPos);
+        // TV position for camera zoom
+        tvPos = new FlxObject(900, 350, 1, 1); // Adjust to match TV center in your background
+        add(tvPos);
 
-        magenta = new FlxSprite(-80).loadGraphic(Paths.image('menuDesat'));
-        magenta.scrollFactor.set(0, yScroll);
-        magenta.setGraphicSize(Std.int(magenta.width * 1.175));
-        magenta.updateHitbox();
-        magenta.screenCenter();
-        magenta.visible = false;
-        magenta.antialiasing = ClientPrefs.globalAntialiasing;
-        magenta.color = 0xFFfd719b;
-        //add(magenta);
-
-        // Title text (top left)
+        // Title and DEMO
         var titleText:FlxText = new FlxText(32, 32, 0, "the funkin' catalogue", 32);
-        titleText.setFormat("VCR OSD Mono", 32, 0xFFC0C0C0, LEFT, FlxColor.BLACK); // light gray
+        titleText.setFormat("VCR OSD Mono", 32, 0xFFC0C0C0, LEFT, FlxColor.BLACK);
         titleText.alpha = 0.7;
         add(titleText);
-        // DEMO tag (top right of title)
         var demoText:FlxText = new FlxText(titleText.x + titleText.width + 16, 40, 0, "DEMO", 28);
-        demoText.setFormat("VCR OSD Mono", 28, 0xFF444444, LEFT, FlxColor.BLACK); // dark gray
+        demoText.setFormat("VCR OSD Mono", 28, 0xFF444444, LEFT, FlxColor.BLACK);
         demoText.alpha = 0.5;
         add(demoText);
 
-        // Menu items (styled as in screenshot)
+        // Menu items
         menuItems = new FlxTypedGroup<FlxText>();
         add(menuItems);
         var menuStartY = 180;
@@ -127,24 +107,26 @@ class MainMenuState extends MusicBeatState
         var menuX = 180;
         for (i in 0...optionShit.length)
         {
-            var label = new FlxText(menuX, menuStartY + i*menuGap, 0, optionShit[i].toUpperCase(), 48);
+            var label = new FlxText(menuX, menuStartY + i*menuGap, 0, optionShit[i].substr(0,1).toUpperCase() + optionShit[i].substr(1), 48);
             label.setFormat("VCR OSD Mono", 48, FlxColor.WHITE, LEFT, FlxColor.BLACK);
             label.alpha = (i == 0) ? 1 : 0.4;
+            label.bold = (i == 0);
             label.color = FlxColor.WHITE;
             add(label);
             menuItems.add(label);
         }
         // White rectangle selector
-        var selector:FlxSprite = new FlxSprite(menuX - 50, menuStartY, null);
+        selector = new FlxSprite(menuX - 50, menuStartY, null);
         selector.makeGraphic(18, 48, FlxColor.WHITE);
         selector.alpha = 1;
         add(selector);
         curSelected = 0;
         updateSelectionVisuals();
-        FlxG.camera.follow(camFollowPos, null, 1);
+        FlxG.camera.follow(null);
 
         changeItem();
 
+        // Version text (keep removed but here cause it was in the original and needs to be here)
         var versionShit:FlxText = new FlxText(12, FlxG.height - 44, 0, "Psych Engine v" + psychEngineVersion, 12);
         versionShit.scrollFactor.set();
         versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxColor.BLACK);
@@ -153,7 +135,6 @@ class MainMenuState extends MusicBeatState
         versionShit.scrollFactor.set();
         versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxColor.BLACK);
         //add(versionShit);
-
         #if ACHIEVEMENTS_ALLOWED
         Achievements.loadAchievements();
         var leDate = Date.now();
@@ -179,17 +160,60 @@ class MainMenuState extends MusicBeatState
     }
     #end
 
+    function updateSelectionVisuals():Void
+    {
+        for (i in 0...menuItems.length)
+        {
+            var label = menuItems.members[i];
+            label.alpha = (i == curSelected) ? 1 : 0.4;
+            label.bold = (i == curSelected);
+        }
+        var selectedLabel = menuItems.members[curSelected];
+        selector.x = selectedLabel.x - 50;
+        selector.y = selectedLabel.y;
+        selector.visible = true;
+    }
+
+    function changeItem(delta:Int = 0):Void
+    {
+        curSelected = (curSelected + delta + menuItems.length) % menuItems.length;
+        updateSelectionVisuals();
+    }
+
+    var transitioning:Bool = false;
+    var nextState:MusicBeatState = null;
+    function onSelect():Void
+    {
+        if (transitioning) return;
+        transitioning = true;
+        // Camera zoom to TV, then switch state
+        FlxG.camera.focusOn(tvPos.getPosition());
+        FlxTween.tween(FlxG.camera, {zoom: 2.2}, 0.6, {
+            ease: FlxEase.cubeIn,
+            onComplete: function(_) {
+                switch (optionShit[curSelected])
+                {
+                    case 'story mode':
+                        MusicBeatState.switchState(new StoryMenuState());
+                    case 'freeplay':
+                        MusicBeatState.switchState(new FreeplayState());
+                    case 'credits':
+                        MusicBeatState.switchState(new CreditsState());
+                    case 'options':
+                        LoadingState.loadAndSwitchState(new options.OptionsState());
+                }
+            }
+        });
+    }
+
     override function update(elapsed:Float)
     {
-        // Removed introPlayed and introVideo logic
         if (FlxG.sound.music.volume < 0.8)
         {
             FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
             if(FreeplayState.vocals != null) FreeplayState.vocals.volume += 0.5 * elapsed;
         }
-        var lerpVal:Float = CoolUtil.boundTo(elapsed * 7.5, 0, 1);
-        camFollowPos.setPosition(FlxMath.lerp(camFollowPos.x, camFollow.x, lerpVal), FlxMath.lerp(camFollowPos.y, camFollow.y, lerpVal));
-        if (!selectedSomethin)
+        if (!selectedSomethin && !transitioning)
         {
             if (FlxG.keys.justPressed.UP)    changeItem(-1);
             if (FlxG.keys.justPressed.DOWN)  changeItem( 1);
@@ -203,47 +227,7 @@ class MainMenuState extends MusicBeatState
             }
             if (controls.ACCEPT)
             {
-                if (optionShit[curSelected] == 'donate')
-                {
-                    CoolUtil.browserLoad('https://ninja-muffin24.itch.io/funkin');
-                }
-                else
-                {
-                    selectedSomethin = true;
-                    FlxG.sound.play(Paths.sound('confirmMenu'));
-                    if(ClientPrefs.flashing) FlxFlicker.flicker(magenta, 1.1, 0.15, false);
-                    menuItems.forEach(function(spr:FlxSprite)
-                    {
-                        if (curSelected != spr.ID)
-                        {
-                            FlxTween.tween(spr, {alpha: 0}, 0.4, {
-                                ease: FlxEase.quadOut,
-                                onComplete: function(twn:FlxTween)
-                                {
-                                    spr.kill();
-                                }
-                            });
-                        }
-                        else
-                        {
-                            FlxFlicker.flicker(spr, 1, 0.06, false, false, function(flick:FlxFlicker)
-                            {
-                                var daChoice:String = optionShit[curSelected];
-                                switch (daChoice)
-                                {
-                                    case 'story_mode':
-                                        MusicBeatState.switchState(new StoryMenuState());
-                                    case 'freeplay':
-                                        MusicBeatState.switchState(new FreeplayState());
-                                    case 'credits':
-                                        MusicBeatState.switchState(new CreditsState());
-                                    case 'options':
-                                        LoadingState.loadAndSwitchState(new options.OptionsState());
-                                }
-                            });
-                        }
-                    });
-                }
+                onSelect();
             }
             #if desktop
             else if (FlxG.keys.anyJustPressed(debugKeys))
@@ -258,39 +242,5 @@ class MainMenuState extends MusicBeatState
         {
             spr.screenCenter(X);
         });
-    }
-
-    function updateSelectionVisuals():Void
-    {
-        for (i in 0...menuItems.length)
-        {
-            var label = menuItems.members[i];
-            label.alpha = (i == curSelected) ? 1 : 0.4;
-        }
-        var selectedLabel = menuItems.members[curSelected];
-        underline.x = selectedLabel.x;
-        underline.y = selectedLabel.y + selectedLabel.height + 4;
-        underline.visible = true;
-    }
-
-    function changeItem(delta:Int = 0):Void
-    {
-        curSelected = (curSelected + delta + menuItems.length) % menuItems.length;
-        updateSelectionVisuals();
-    }
-
-    function onSelect():Void
-    {
-        switch (optionShit[curSelected])
-        {
-            case 'story mode':
-                MusicBeatState.switchState(new StoryMenuState());
-            case 'freeplay':
-                MusicBeatState.switchState(new FreeplayState());
-            case 'credits':
-                MusicBeatState.switchState(new CreditsState());
-            case 'options':
-                LoadingState.loadAndSwitchState(new options.OptionsState());
-        }
     }
 }
