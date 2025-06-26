@@ -95,7 +95,6 @@ class DiscordClient
 
 		// Custom icon logic for songs
 		var largeImageKey = 'icon';
-		#if (exists('PlayState') && exists('PlayState.SONG'))
 		try {
 			var songName = null;
 			if (Reflect.hasField(PlayState, 'SONG') && PlayState.SONG != null && Reflect.hasField(PlayState.SONG, 'song')) {
@@ -116,7 +115,6 @@ class DiscordClient
 				}
 			}
 		} catch(e:Dynamic) {}
-		#end
 
 		DiscordRpc.presence({
 			details: details,
