@@ -100,9 +100,8 @@ class MainMenuState extends MusicBeatState
         demoText.alpha = 0.5;
         add(demoText);
 
-        // Menu items
+        // Menu items (robust, no double add, no nulls)
         menuItems = new FlxTypedGroup<FlxText>();
-        add(menuItems);
         var menuStartY = 180;
         var menuGap = 70;
         var menuX = 180;
@@ -119,15 +118,20 @@ class MainMenuState extends MusicBeatState
                 label.color = FlxColor.WHITE;
             }
             menuItems.add(label);
-            add(label);
         }
+        add(menuItems); // Add group after all items are in
         // Selector setup
         selector = new FlxSprite(menuX - 50, menuStartY);
         selector.makeGraphic(18, 48, FlxColor.WHITE);
         selector.alpha = 1;
         add(selector);
         curSelected = 0;
-        updateSelectionVisuals();
+        // Only call updateSelectionVisuals if menuItems is fully populated
+        if (menuItems != null && menuItems.length == optionShit.length && selector != null && menuItems.members[curSelected] != null) {
+            updateSelectionVisuals();
+        } else {
+            trace('Menu not ready for updateSelectionVisuals');
+        }
         FlxG.camera.follow(null);
 
         changeItem();
