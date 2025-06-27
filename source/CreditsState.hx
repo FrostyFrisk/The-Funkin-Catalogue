@@ -81,9 +81,9 @@ class CreditsState extends MusicBeatState
         DiscordClient.changePresence("Viewing Credits", null);
         #end
         persistentUpdate = true;
-        bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+        bg = new FlxSprite(0, 0);
+        bg.makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
         add(bg);
-        bg.screenCenter();
         
         // Calculate starting Y so credits start off-screen at the bottom
         startY = FlxG.height;

@@ -1,292 +1,276 @@
 package;
 
-#if desktop
-import Discord.DiscordClient;
-#end
 import flixel.FlxG;
-import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.FlxCamera;
-import flixel.addons.transition.FlxTransitionableState;
-import flixel.effects.FlxFlicker;
-import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.text.FlxText;
-import flixel.math.FlxMath;
-import flixel.tweens.FlxEase;
-import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
-import lime.app.Application;
-import Achievements;
-import editors.MasterEditorMenu;
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+import flixel.FlxState;
+import flixel.system.FlxSound;
+import flixel.util.FlxTimer;
 import flixel.input.keyboard.FlxKey;
-import openfl.media.Video;
-import openfl.net.NetConnection;
-import openfl.net.NetStream;
-import openfl.events.NetStatusEvent;
+import flixel.FlxObject;
+
+// Import the BGParticleEffect class
 import BGParticleEffect;
 
-using StringTools;
-
-class MainMenuState extends MusicBeatState
+class MainMenuState extends FlxState
 {
-    public static var psychEngineVersion:String = '0.6.2';
-    public static var curSelected:Int = 0;
-    // Removed introPlayed
-
+    public static var psychEngineVersion:String = "Psych Engine v0.6.3";
+    
     var menuItems:FlxTypedGroup<FlxText>;
     var selector:FlxSprite;
-    var tvPos:FlxObject; // For camera zoom target
-    // Removed introVideo
-    
-    var optionShit:Array<String> = [
-        'story mode',
-        'freeplay',
-        'credits',
-        'options'
-    ];
+    var options:Array<String> = ['Play', 'Freeplay', 'Options', 'Credits'];
+    var curSelected:Int = 0;
+    var transitioning:Bool = false;
+    var wallBg:FlxSprite;
+    var tvSprite:FlxSprite;
+    var dresser:FlxSprite;
+    var titleText:FlxText;
+    var demoText:FlxText;
+    var moveSfx:FlxSound;
+    var confirmSfx:FlxSound;
+    var versionShit:String = "v1.0.0";
+    var errorSfx:FlxSound;
+    var mainCam:FlxCamera;
+    var fadeOverlay:FlxSprite;
+    var lastInputTime:Float = 0;
+    var inputCooldown:Float = 0.12;
+    var tvFlickerGlow:FlxSprite;
 
-    var magenta:FlxSprite;
-    var camFollow:FlxObject;
-    var camFollowPos:FlxObject;
-    var debugKeys:Array<FlxKey>;
-    var selectedSomethin:Bool = false;
+    // Add a variable for the particle effect
+    var bgParticles:BGParticleEffect;
 
-    private var camGame:FlxCamera;
-    private var camAchievement:FlxCamera;
-
-    var tvWhiteScreen:FlxSprite;
-
-    override function create()
+    override public function create():Void
     {
-        trace('MainMenuState.create() called');
-        #if MODS_ALLOWED
-        Paths.pushGlobalMods();
-        #end
-        WeekData.loadTheFirstEnabledMod();
-        #if desktop
-        DiscordClient.changePresence("In the Menus", null);
-        #end
-        debugKeys = ClientPrefs.copyKey(ClientPrefs.keyBinds.get('debug_1'));
+        super.create();
 
-        camGame = new FlxCamera();
-        camAchievement = new FlxCamera();
-        camAchievement.bgColor.alpha = 0;
-        FlxG.cameras.reset(camGame);
-        FlxG.cameras.add(camAchievement, false);
-        FlxG.cameras.setDefaultDrawTarget(camGame, true);
-        transIn = FlxTransitionableState.defaultTransIn;
-        transOut = FlxTransitionableState.defaultTransOut;
-        persistentUpdate = persistentDraw = true;
+        // Camera
+        mainCam = new FlxCamera();
+        FlxG.cameras.reset(mainCam);
+        FlxG.cameras.setDefaultDrawTarget(mainCam, true);
 
-        // Background art
-        var bg:FlxSprite = new FlxSprite(0, 0).loadGraphic(Paths.image('newmainmenuart/background'));
-        bg.scrollFactor.set(0, 0.1);
-        add(bg);
-        add(new BGParticleEffect());
+        // Play menu music
+        FlxG.sound.playMusic(Paths.music("TFCMenu"), 1, true);
+        
+        // --- Layered Art Assets ---
 
-        // TV position for camera zoom
-        tvPos = new FlxObject(900, 350, 1, 1);
-        add(tvPos);
+        // 1. menuBG_dark (full background)
+        wallBg = new FlxSprite().loadGraphic("assets/images/newmainmenuart/thewall.png");
+        wallBg.antialiasing = true;
+        wallBg.scrollFactor.set(0, 0);
+        add(wallBg);
 
-        // Title and DEMO
-        var titleText:FlxText = new FlxText(32, 32, 0, "the funkin' catalogue", 32);
-        titleText.setFormat("VCR OSD Mono", 32, 0xFFC0C0C0, LEFT, FlxColor.BLACK);
-        titleText.alpha = 0.7;
+        // BG Particle Effect (behind every other but not behind the wall)
+        bgParticles = new BGParticleEffect();
+        add(bgParticles);
+
+        // 2. menuBG_overlay (left faded overlay for menu)
+        var bgOverlay = new FlxSprite().loadGraphic("assets/images/newmainmenuart/menuitemsholder.png");
+        bgOverlay.antialiasing = true;
+        bgOverlay.scrollFactor.set(0, 0);
+        add(bgOverlay);
+
+        // 5. menu_tv (TV)
+        tvSprite = new FlxSprite().loadGraphic("assets/images/newmainmenuart/tvoff.png");
+        tvSprite.antialiasing = true;
+        tvSprite.scrollFactor.set(0, 0);
+        add(tvSprite);
+
+        // 6. menu_tv_white (TV white screen, hidden by default)
+        var tvWhite = new FlxSprite(tvSprite.x, tvSprite.y).loadGraphic("assets/images/newmainmenuart/tvon.png");
+        tvWhite.antialiasing = true;
+        tvWhite.scrollFactor.set(0, 0);
+        tvWhite.visible = false;
+        add(tvWhite);
+
+        // 7. menu_flickerglow (TV flicker, hidden by default)
+        tvFlickerGlow = new FlxSprite(tvSprite.x, tvSprite.y).loadGraphic("assets/images/newmainmenuart/tvflickerglow.png");
+        tvFlickerGlow.antialiasing = true;
+        tvFlickerGlow.scrollFactor.set(0, 0);
+        tvFlickerGlow.visible = false;
+        add(tvFlickerGlow);
+
+        // 3. menuBG_filter (blue filter overlay)
+        var filter = new FlxSprite().loadGraphic("assets/images/newmainmenuart/bluefilter.png");
+        filter.antialiasing = true;
+        filter.scrollFactor.set(0, 0);
+        add(filter);
+
+        //    Cinematic Bars
+        var cinematicBars = new FlxSprite().loadGraphic("assets/images/newmainmenuart/cinematicbars.png");
+        cinematicBars.antialiasing = true;
+        cinematicBars.scrollFactor.set(0, 0);
+        add(cinematicBars);
+
+        // --- Logo Text ---
+        titleText = new FlxText(40, 60, 0, "the funkin' catalogue", 32);
+        titleText.setFormat("VCR OSD Mono", 32, FlxColor.GRAY, "left");
+        titleText.alpha = 0.8;
         add(titleText);
-        var demoText:FlxText = new FlxText(titleText.x + titleText.width + 16, 40, 0, "DEMO", 28);
-        demoText.setFormat("VCR OSD Mono", 28, 0xFF444444, LEFT, FlxColor.BLACK);
+        demoText = new FlxText(320, 90, 0, "DEMO", 32);
+        demoText.setFormat("VCR OSD Mono", 32, FlxColor.GRAY, "left");
         demoText.alpha = 0.5;
         add(demoText);
 
         // Menu items
         menuItems = new FlxTypedGroup<FlxText>();
-        var menuStartY = 180;
-        var menuGap = 70;
-        var menuX = 180;
-        for (i in 0...optionShit.length) {
-            var labelText = optionShit[i].substr(0,1).toUpperCase() + optionShit[i].substr(1);
-            var label = new FlxText(menuX, menuStartY + i * menuGap, 0, labelText, 48);
-            label.setFormat("VCR OSD Mono", 48, FlxColor.WHITE, LEFT, FlxColor.BLACK);
-            label.alpha = (i == 0) ? 1 : 0.4;
-            label.bold = (i == 0);
-            if (optionShit[i] == 'freeplay') {
-                label.color = 0xFF888888;
-                label.alpha = 0.6;
-            } else {
-                label.color = FlxColor.WHITE;
-            }
-            menuItems.add(label);
+        var startY = 180;
+        var gap = 70;
+        for (i in 0...options.length)
+        {
+            var txt = new FlxText(80, startY + i * gap, 0, options[i], 48);
+            txt.setFormat("VCR OSD Mono", 48, (i == 1) ? FlxColor.GRAY : FlxColor.WHITE, "left");
+            txt.alpha = (i == curSelected) ? 1 : ((i == 1) ? 0.4 : 0.7);
+            txt.bold = (i == curSelected);
+            menuItems.add(txt);
         }
         add(menuItems);
 
-        // Selector
-        selector = new FlxSprite(menuX - 50, menuStartY);
-        selector.makeGraphic(18, 48, FlxColor.WHITE);
-        selector.alpha = 1;
+        // Selector (rectangle bar)
+        selector = new FlxSprite(48, startY + curSelected * gap + 8);
+        selector.makeGraphic(16, 48, FlxColor.GRAY);
+        selector.alpha = 0.8;
         add(selector);
-        curSelected = 0;
-        updateSelectionVisuals();
-        FlxG.camera.follow(null);
 
-        // Version text
-        var versionShit:FlxText = new FlxText(12, FlxG.height - 44, 0, "Psych Engine v" + psychEngineVersion, 12);
-        versionShit.scrollFactor.set();
-        versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxColor.BLACK);
-        //add(versionShit);
-        versionShit = new FlxText(12, FlxG.height - 24, 0, "Friday Night Funkin' v" + Application.current.meta.get('version'), 12);
-        versionShit.scrollFactor.set();
-        versionShit.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxColor.BLACK);
-        //add(versionShit);
-        #if ACHIEVEMENTS_ALLOWED
-        Achievements.loadAchievements();
-        var leDate = Date.now();
-        if (leDate.getDay() == 5 && leDate.getHours() >= 18) {
-            var achieveID:Int = Achievements.getAchievementIndex('friday_night_play');
-            if(!Achievements.isAchievementUnlocked(Achievements.achievementsStuff[achieveID][2])) {
-                Achievements.achievementsMap.set(Achievements.achievementsStuff[achieveID][2], true);
-                giveAchievement();
-                ClientPrefs.saveSettings();
-            }
-        }
-        #end
+        // Fade overlay for transitions
+        fadeOverlay = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
+        fadeOverlay.alpha = 0;
+        fadeOverlay.scrollFactor.set();
+        add(fadeOverlay);
 
-        tvWhiteScreen = new FlxSprite(tvPos.x - 120, tvPos.y - 90).makeGraphic(240, 180, FlxColor.WHITE);
-        tvWhiteScreen.visible = false;
-        add(tvWhiteScreen);
+        // Sounds
+        moveSfx = FlxG.sound.load("assets/sounds/menu_move.ogg");
+        confirmSfx = FlxG.sound.load("assets/sounds/menu_select.ogg");
+        errorSfx = FlxG.sound.load("assets/sounds/menu_error.ogg");
 
-        super.create();
+        updateSelection();
     }
 
-    #if ACHIEVEMENTS_ALLOWED
-    // Unlocks "Freaky on a Friday Night" achievement
-    function giveAchievement() {
-        add(new AchievementObject('friday_night_play', camAchievement));
-        FlxG.sound.play(Paths.sound('confirmMenu'), 0.7);
-        trace('Giving achievement "friday_night_play"');
-    }
-    #end
-
-    function updateSelectionVisuals():Void
+    function updateSelection():Void
     {
-        if (menuItems == null || menuItems.length == 0) return;
-        if (curSelected < 0 || curSelected >= menuItems.length) return;
         for (i in 0...menuItems.length)
         {
-            var label = menuItems.members[i];
-            if (label != null) {
-                if (optionShit[i] == 'freeplay') {
-                    label.color = 0xFF888888;
-                    label.alpha = 0.6;
-                } else {
-                    label.alpha = (i == curSelected) ? 1 : 0.4;
-                    label.color = FlxColor.WHITE;
-                }
-                label.bold = (i == curSelected);
+            var txt = menuItems.members[i];
+            if (i == 1) { // Freeplay is locked
+                txt.alpha = 0.4;
+                txt.color = FlxColor.GRAY;
+            } else {
+                txt.alpha = (i == curSelected) ? 1 : 0.7;
+                txt.color = (i == curSelected) ? FlxColor.WHITE : FlxColor.GRAY;
             }
+            txt.bold = (i == curSelected);
         }
-        var selectedLabel:FlxText = null;
-        if (curSelected >= 0 && curSelected < menuItems.length)
-            selectedLabel = menuItems.members[curSelected];
-        // Fix: Only use selector.x/y if both are not null and are valid floats
-        if (selector != null && selectedLabel != null) {
-            selector.x = selectedLabel.x - 50;
-            selector.y = selectedLabel.y;
-            selector.visible = true;
-        }
+        var selected = menuItems.members[curSelected];
+        selector.y = selected.y + 8;
     }
 
-    function changeItem(delta:Int = 0):Void
-    {
-        if (menuItems == null || menuItems.length == 0) return;
-        curSelected = (curSelected + delta + menuItems.length) % menuItems.length;
-        updateSelectionVisuals();
-    }
-
-    var transitioning:Bool = false;
-    var nextState:MusicBeatState = null;
-    function onSelect():Void
+    function changeSelection(delta:Int):Void
     {
         if (transitioning) return;
-        var selectedLabel = menuItems.members[curSelected];
-        if (optionShit[curSelected] == 'freeplay') {
-            // Play error/locked SFX and shake the menu item
-            FlxG.sound.play(Paths.sound('cancelMenu'));
-            if (selectedLabel != null) {
-                FlxFlicker.flicker(selectedLabel, 0.4, 0.05, true, false);
-            }
-            return;
+        var prev = curSelected;
+        do {
+            curSelected = (curSelected + delta + options.length) % options.length;
+        } while (curSelected == 1); // skip Freeplay (locked)
+        if (prev != curSelected) {
+            moveSfx.play(true);
+            updateSelection();
         }
-        // In onSelect(), replace the 'story mode' case:
-        if (optionShit[curSelected] == 'story mode') {
-            if (transitioning) return;
-            transitioning = true;
-            // Show and flicker the white screen on the TV
-            tvWhiteScreen.visible = true;
-            FlxFlicker.flicker(tvWhiteScreen, 0.5, 0.08, true, false, function(_) {
-                // After flicker, zoom in and start the song
-                FlxG.camera.focusOn(tvPos.getPosition());
-                FlxTween.tween(FlxG.camera, {zoom: 2.2}, 0.5, {
-                    ease: FlxEase.cubeIn,
-                    onComplete: function(_) {
-                        // Load and play Newsflash directly
-                        PlayState.SONG = Song.loadFromJson("newsflash", "newsflash");
-                        PlayState.isStoryMode = false;
-                        PlayState.storyDifficulty = 1; // or 0 for easy
-                        LoadingState.loadAndSwitchState(new PlayState());
-                    }
-                });
-            });
+    }
+
+    function selectOption():Void
+    {
+        if (transitioning) return;
+        if (curSelected == 1) { // Freeplay locked
+            errorSfx.play(true);
             return;
         }
         transitioning = true;
-        // Camera zoom to TV, then switch state
-        FlxG.camera.focusOn(tvPos.getPosition());
-        FlxTween.tween(FlxG.camera, {zoom: 2.2}, 0.6, {
-            ease: FlxEase.cubeIn,
-            onComplete: function(_) {
-                switch (optionShit[curSelected])
-                {
-                    case 'story mode':
-                        MusicBeatState.switchState(new StoryMenuState());
-                    case 'credits':
-                        MusicBeatState.switchState(new CreditsState());
-                    case 'options':
-                        LoadingState.loadAndSwitchState(new options.OptionsState());
-                }
-            }
+        confirmSfx.play(true);
+
+        switch (curSelected)
+        {
+            case 0: // Play
+                fadeIn(function() {
+                    FlxG.switchState(new PlayState());
+                });
+            case 2: // Options
+                fadeIn(function() {
+                    FlxG.switchState(new options.OptionsState());
+                });
+            case 3: // Credits
+                fadeIn(function() {
+                    FlxG.switchState(new CreditsState());
+                });
+        }
+    }
+
+    function showFlickerGlow():Void {
+        tvFlickerGlow.visible = true;
+        tvFlickerGlow.alpha = 1;
+        FlxTween.tween(tvFlickerGlow, {alpha: 0}, 0.18, {
+            ease: FlxEase.quadIn,
+            onComplete: function(_) tvFlickerGlow.visible = false
         });
     }
 
-    override function update(elapsed:Float)
-    {
-        if (FlxG.sound.music.volume < 0.8)
-        {
-            FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
-            if(FreeplayState.vocals != null) FreeplayState.vocals.volume += 0.5 * elapsed;
-        }
-        if (!selectedSomethin && !transitioning)
-        {
-            if (FlxG.keys.justPressed.UP)    changeItem(-1);
-            if (FlxG.keys.justPressed.DOWN)  changeItem( 1);
-            if (FlxG.keys.justPressed.ENTER || FlxG.keys.justPressed.SPACE)
-                onSelect();
-            if (controls.ACCEPT)
-            {
-                onSelect();
-            }
-            #if desktop
-            else if (FlxG.keys.anyJustPressed(debugKeys))
-            {
-                selectedSomethin = true;
-                MusicBeatState.switchState(new MasterEditorMenu());
-            }
-            #end
-        }
-        super.update(elapsed);
-        menuItems.forEach(function(spr:FlxSprite)
-        {
-            spr.screenCenter(X);
+    function fadeIn(callback:Void->Void):Void {
+        fadeOverlay.alpha = 0;
+
+        // Calculate the center of the TV sprite in screen coordinates
+        var tvCenterX = tvSprite.x + tvSprite.width / 2;
+        var tvCenterY = tvSprite.y + tvSprite.height / 2;
+
+        // Target camera zoom and scroll so that TV center stays centered on screen
+        var targetZoom = 2;
+        var targetScrollX = tvCenterX - (FlxG.width / (2 * targetZoom));
+        var targetScrollY = tvCenterY - (FlxG.height / (2 * targetZoom));
+
+        // Tween camera zoom and position to focus on TV, slower duration
+        FlxTween.tween(mainCam, {zoom: targetZoom}, 1.0, {
+            ease: FlxEase.quadInOut
         });
+        FlxTween.tween(mainCam.scroll, {x: targetScrollX, y: targetScrollY}, 1.0, {
+            ease: FlxEase.quadInOut
+        });
+
+        // Flicker effect on TV
+        showFlickerGlow();
+
+        // Turn TV ON (show tvWhite, hide tvSprite)
+        tvSprite.visible = false;
+        // Find the tvWhite sprite (added after tvSprite)
+        var tvWhite:FlxSprite = null;
+        for (sprite in members) {
+            if (Std.isOfType(sprite, FlxSprite)) {
+                var spr = cast(sprite, FlxSprite);
+                if (spr.graphic != null && spr.graphic.key != null && spr.graphic.key.indexOf("tvon.png") != -1) {
+                    tvWhite = spr;
+                    break;
+                }
+            }
+        }
+        if (tvWhite != null) tvWhite.visible = true;
+
+        // Fade to black overlay, slower duration
+        FlxTween.tween(fadeOverlay, {alpha: 1}, 1.0, {
+            ease: FlxEase.quadIn,
+            onComplete: function(_) callback()
+        });
+    }
+
+    override public function update(elapsed:Float):Void
+    {
+        super.update(elapsed);
+        
+        if (!transitioning)
+        {
+            if (FlxG.keys.anyJustPressed([FlxKey.UP, FlxKey.W])) changeSelection(-1);
+            if (FlxG.keys.anyJustPressed([FlxKey.DOWN, FlxKey.S])) changeSelection(1);
+            if (FlxG.keys.anyJustPressed([FlxKey.ENTER, FlxKey.SPACE])) selectOption();
+        }
     }
 }
