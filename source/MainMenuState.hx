@@ -55,6 +55,8 @@ class MainMenuState extends MusicBeatState
     private var camGame:FlxCamera;
     private var camAchievement:FlxCamera;
 
+    var tvWhiteScreen:FlxSprite;
+
     override function create()
     {
         trace('MainMenuState.create() called');
@@ -157,6 +159,11 @@ class MainMenuState extends MusicBeatState
         }
         #end
 
+        // In create(), after adding tvPos:
+        tvWhiteScreen = new FlxSprite(tvPos.x - 120, tvPos.y - 90).makeGraphic(240, 180, FlxColor.WHITE);
+        tvWhiteScreen.visible = false;
+        add(tvWhiteScreen);
+
         super.create();
     }
 
@@ -219,6 +226,28 @@ class MainMenuState extends MusicBeatState
             }
             return;
         }
+        // In onSelect(), replace the 'story mode' case:
+        if (optionShit[curSelected] == 'story mode') {
+            if (transitioning) return;
+            transitioning = true;
+            // Show and flicker the white screen on the TV
+            tvWhiteScreen.visible = true;
+            FlxFlicker.flicker(tvWhiteScreen, 0.5, 0.08, true, false, function(_) {
+                // After flicker, zoom in and start the song
+                FlxG.camera.focusOn(tvPos.getPosition());
+                FlxTween.tween(FlxG.camera, {zoom: 2.2}, 0.5, {
+                    ease: FlxEase.cubeIn,
+                    onComplete: function(_) {
+                        // Load and play Newsflash directly
+                        PlayState.SONG = Song.loadFromJson("newsflash", "newsflash");
+                        PlayState.isStoryMode = false;
+                        PlayState.storyDifficulty = 1; // or 0 for easy
+                        LoadingState.loadAndSwitchState(new PlayState());
+                    }
+                });
+            });
+            return;
+        }
         transitioning = true;
         // Camera zoom to TV, then switch state
         FlxG.camera.focusOn(tvPos.getPosition());
@@ -251,12 +280,6 @@ class MainMenuState extends MusicBeatState
             if (FlxG.keys.justPressed.DOWN)  changeItem( 1);
             if (FlxG.keys.justPressed.ENTER || FlxG.keys.justPressed.SPACE)
                 onSelect();
-            if (controls.BACK)
-            {
-                selectedSomethin = true;
-                FlxG.sound.play(Paths.sound('cancelMenu'));
-                MusicBeatState.switchState(new TitleState());
-            }
             if (controls.ACCEPT)
             {
                 onSelect();
