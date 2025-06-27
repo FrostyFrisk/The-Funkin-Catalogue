@@ -106,33 +106,28 @@ class MainMenuState extends MusicBeatState
         var menuStartY = 180;
         var menuGap = 70;
         var menuX = 180;
-        for (i in 0...optionShit.length)
-        {
-            var label = new FlxText(menuX, menuStartY + i*menuGap, 0, optionShit[i].substr(0,1).toUpperCase() + optionShit[i].substr(1), 48);
+        for (i in 0...optionShit.length) {
+            var labelText = optionShit[i].substr(0,1).toUpperCase() + optionShit[i].substr(1);
+            var label = new FlxText(menuX, menuStartY + i * menuGap, 0, labelText, 48);
             label.setFormat("VCR OSD Mono", 48, FlxColor.WHITE, LEFT, FlxColor.BLACK);
+            label.alpha = (i == 0) ? 1 : 0.4;
+            label.bold = (i == 0);
             if (optionShit[i] == 'freeplay') {
-                label.color = 0xFF888888; // greyed out
+                label.color = 0xFF888888;
                 label.alpha = 0.6;
             } else {
-                label.alpha = (i == 0) ? 1 : 0.4;
                 label.color = FlxColor.WHITE;
             }
-            label.bold = (i == 0);
-            add(label);
             menuItems.add(label);
+            add(label);
         }
-        // White rectangle selector
-        selector = new FlxSprite(menuX - 50, menuStartY, null);
+        // Selector setup
+        selector = new FlxSprite(menuX - 50, menuStartY);
         selector.makeGraphic(18, 48, FlxColor.WHITE);
         selector.alpha = 1;
         add(selector);
         curSelected = 0;
-        // Only call updateSelectionVisuals if everything is ready
-        if (menuItems != null && menuItems.length > 0 && selector != null && menuItems.members[curSelected] != null) {
-            updateSelectionVisuals();
-        } else {
-            trace('Menu not ready for updateSelectionVisuals');
-        }
+        updateSelectionVisuals();
         FlxG.camera.follow(null);
 
         changeItem();
