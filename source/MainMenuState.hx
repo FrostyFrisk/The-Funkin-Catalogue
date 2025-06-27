@@ -192,8 +192,8 @@ class MainMenuState extends MusicBeatState
             selectedLabel = menuItems.members[curSelected];
         // Fix: Only use selector.x/y if both are not null and are valid floats
         if (selector != null && selectedLabel != null) {
-            selector.x = (selectedLabel.x != null) ? selectedLabel.x - 50 : 0;
-            selector.y = (selectedLabel.y != null) ? selectedLabel.y : 0;
+            selector.x = selectedLabel.x - 50;
+            selector.y = selectedLabel.y;
             selector.visible = true;
         }
     }
