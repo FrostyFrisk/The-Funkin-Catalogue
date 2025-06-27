@@ -38,7 +38,7 @@ class MainMenuState extends MusicBeatState
     var selector:FlxSprite;
     var tvPos:FlxObject; // For camera zoom target
     // Removed introVideo
-    
+
     var optionShit:Array<String> = [
         'story mode',
         'freeplay',
@@ -118,19 +118,24 @@ class MainMenuState extends MusicBeatState
                 label.color = FlxColor.WHITE;
             }
             menuItems.add(label);
+            trace('Menu item created and added: ' + labelText + ' at index ' + i + ' (label is null? ' + (label == null) + ')');
         }
         add(menuItems); // Add group after all items are in
+        trace('All menu items added. menuItems.length=' + menuItems.length);
+
         // Selector setup
         selector = new FlxSprite(menuX - 50, menuStartY);
         selector.makeGraphic(18, 48, FlxColor.WHITE);
         selector.alpha = 1;
         add(selector);
         curSelected = 0;
+
         // Only call updateSelectionVisuals if menuItems is fully populated
         if (menuItems != null && menuItems.length == optionShit.length && selector != null && menuItems.members[curSelected] != null) {
+            trace('Calling updateSelectionVisuals after menuItems creation');
             updateSelectionVisuals();
         } else {
-            trace('Menu not ready for updateSelectionVisuals');
+            trace('Menu not ready for updateSelectionVisuals: menuItems=' + (menuItems == null) + ', selector=' + (selector == null) + ', menuItems.length=' + (menuItems != null ? menuItems.length : 'null') + ', curSelected=' + curSelected + ', menuItems.members[curSelected]=' + (menuItems != null && menuItems.members != null && curSelected < menuItems.members.length ? (menuItems.members[curSelected] == null) : 'n/a'));
         }
         FlxG.camera.follow(null);
 
@@ -177,25 +182,35 @@ class MainMenuState extends MusicBeatState
 
     function updateSelectionVisuals():Void
     {
-        if (menuItems == null || menuItems.length == 0) return;
-        if (curSelected < 0 || curSelected >= menuItems.length) return;
+        trace('updateSelectionVisuals called');
+        if (menuItems == null) { trace('menuItems is null!'); return; }
+        if (menuItems.length == 0) { trace('menuItems.length == 0!'); return; }
+        if (curSelected < 0 || curSelected >= menuItems.length) { trace('curSelected out of bounds: ' + curSelected); return; }
         for (i in 0...menuItems.length)
         {
             var label = menuItems.members[i];
-            if (label != null) {
-                if (optionShit[i] == 'freeplay') {
-                    label.color = 0xFF888888;
-                    label.alpha = 0.6;
-                } else {
-                    label.alpha = (i == curSelected) ? 1 : 0.4;
-                    label.color = FlxColor.WHITE;
-                }
-                label.bold = (i == curSelected);
+            if (label == null) {
+                trace('menuItems.members[' + i + '] is null!');
+                continue;
             }
+            if (optionShit[i] == 'freeplay') {
+                label.color = 0xFF888888;
+                label.alpha = 0.6;
+            } else {
+                label.alpha = (i == curSelected) ? 1 : 0.4;
+                label.color = FlxColor.WHITE;
+            }
+            label.bold = (i == curSelected);
         }
         var selectedLabel:FlxText = null;
         if (curSelected >= 0 && curSelected < menuItems.length)
             selectedLabel = menuItems.members[curSelected];
+        if (selector == null) {
+            trace('selector is null!');
+        }
+        if (selectedLabel == null) {
+            trace('selectedLabel is null!');
+        }
         // Fix: Only use selector.x/y if both are not null and are valid floats
         if (selector != null && selectedLabel != null) {
             selector.x = selectedLabel.x - 50;
@@ -206,8 +221,11 @@ class MainMenuState extends MusicBeatState
 
     function changeItem(delta:Int = 0):Void
     {
-        if (menuItems == null || menuItems.length == 0) return;
+        trace('changeItem called with delta=' + delta);
+        if (menuItems == null) { trace('menuItems is null!'); return; }
+        if (menuItems.length == 0) { trace('menuItems.length == 0!'); return; }
         curSelected = (curSelected + delta + menuItems.length) % menuItems.length;
+        trace('curSelected now: ' + curSelected);
         updateSelectionVisuals();
     }
 
@@ -215,8 +233,13 @@ class MainMenuState extends MusicBeatState
     var nextState:MusicBeatState = null;
     function onSelect():Void
     {
-        if (transitioning) return;
+        trace('onSelect called');
+        if (transitioning) { trace('Already transitioning, return'); return; }
+        if (menuItems == null) { trace('menuItems is null!'); return; }
+        if (menuItems.members == null) { trace('menuItems.members is null!'); return; }
+        if (curSelected < 0 || curSelected >= menuItems.members.length) { trace('curSelected out of bounds: ' + curSelected); return; }
         var selectedLabel = menuItems.members[curSelected];
+        if (selectedLabel == null) { trace('selectedLabel is null!'); }
         if (optionShit[curSelected] == 'freeplay') {
             // Play error/locked SFX and shake the menu item
             FlxG.sound.play(Paths.sound('cancelMenu'));
@@ -227,32 +250,38 @@ class MainMenuState extends MusicBeatState
         }
         // In onSelect(), replace the 'story mode' case:
         if (optionShit[curSelected] == 'story mode') {
-            if (transitioning) return;
+            if (transitioning) { trace('Already transitioning (story mode), return'); return; }
             transitioning = true;
             // Show and flicker the white screen on the TV
-            tvWhiteScreen.visible = true;
-            FlxFlicker.flicker(tvWhiteScreen, 0.5, 0.08, true, false, function(_) {
-                // After flicker, zoom in and start the song
-                FlxG.camera.focusOn(tvPos.getPosition());
-                FlxTween.tween(FlxG.camera, {zoom: 2.2}, 0.5, {
-                    ease: FlxEase.cubeIn,
-                    onComplete: function(_) {
-                        // Load and play Newsflash directly
-                        PlayState.SONG = Song.loadFromJson("newsflash", "newsflash");
-                        PlayState.isStoryMode = false;
-                        PlayState.storyDifficulty = 1; // or 0 for easy
-                        LoadingState.loadAndSwitchState(new PlayState());
-                    }
+            if (tvWhiteScreen == null) { trace('tvWhiteScreen is null!'); }
+            else tvWhiteScreen.visible = true;
+            if (tvWhiteScreen != null) {
+                FlxFlicker.flicker(tvWhiteScreen, 0.5, 0.08, true, false, function(_) {
+                    if (tvPos == null) { trace('tvPos is null!'); }
+                    else FlxG.camera.focusOn(tvPos.getPosition());
+                    FlxTween.tween(FlxG.camera, {zoom: 2.2}, 0.5, {
+                        ease: FlxEase.cubeIn,
+                        onComplete: function(_) {
+                            trace('Loading Newsflash song');
+                            if (PlayState == null) { trace('PlayState is null!'); }
+                            PlayState.SONG = Song.loadFromJson("newsflash", "newsflash");
+                            PlayState.isStoryMode = false;
+                            PlayState.storyDifficulty = 1; // or 0 for easy
+                            LoadingState.loadAndSwitchState(new PlayState());
+                        }
+                    });
                 });
-            });
+            }
             return;
         }
         transitioning = true;
         // Camera zoom to TV, then switch state
-        FlxG.camera.focusOn(tvPos.getPosition());
+        if (tvPos == null) { trace('tvPos is null!'); }
+        else FlxG.camera.focusOn(tvPos.getPosition());
         FlxTween.tween(FlxG.camera, {zoom: 2.2}, 0.6, {
             ease: FlxEase.cubeIn,
             onComplete: function(_) {
+                trace('Switching state for option: ' + optionShit[curSelected]);
                 switch (optionShit[curSelected])
                 {
                     case 'story mode':
@@ -268,10 +297,10 @@ class MainMenuState extends MusicBeatState
 
     override function update(elapsed:Float)
     {
-        if (FlxG.sound.music.volume < 0.8)
+        if (FlxG.sound.music != null && FlxG.sound.music.volume < 0.8)
         {
             FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
-            if(FreeplayState.vocals != null) FreeplayState.vocals.volume += 0.5 * elapsed;
+            if(FreeplayState != null && FreeplayState.vocals != null) FreeplayState.vocals.volume += 0.5 * elapsed;
         }
         if (!selectedSomethin && !transitioning)
         {
@@ -279,7 +308,7 @@ class MainMenuState extends MusicBeatState
             if (FlxG.keys.justPressed.DOWN)  changeItem( 1);
             if (FlxG.keys.justPressed.ENTER || FlxG.keys.justPressed.SPACE)
                 onSelect();
-            if (controls.ACCEPT)
+            if (controls != null && controls.ACCEPT)
             {
                 onSelect();
             }
@@ -292,9 +321,17 @@ class MainMenuState extends MusicBeatState
             #end
         }
         super.update(elapsed);
-        menuItems.forEach(function(spr:FlxSprite)
-        {
-            spr.screenCenter(X);
-        });
+        if (menuItems != null) {
+            menuItems.forEach(function(spr:FlxSprite)
+            {
+                if (spr == null) {
+                    trace('menuItems.forEach: spr is null!');
+                    return;
+                }
+                spr.screenCenter(X);
+            });
+        } else {
+            trace('menuItems is null in update!');
+        }
     }
 }
